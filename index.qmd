@@ -2,7 +2,7 @@
 title: "Chocolate Chip Cookies"
 execute:
   error: true
-author: "Your Name"
+author: "Norah Deckert"
 output: html_document
 ---
 
@@ -12,10 +12,47 @@ First, read in the CSV data of cookie ingredients.
 Make sure that your end-result data has appropriate types for each column - these should match the types provided in the documentation in the README.md file.
 
 ```{r}
+library(skimr)
+library(readr)
+choc_chip_cookie_ingredients <- read_csv("choc_chip_cookie_ingredients.csv")
+skim(choc_chip_cookie_ingredients)
+skim(choc_chip_cookie_ingredients, Recipe_Index, Rating)
+
+#try to write a code to skim to find how many recipes were rated with a 0.8 or higher
+skim(choc_chip_cookie_ingredients, numeric(length(0.8)))
+Rating = function(choc_chip_cookie_ingredients, numeric)
+skim(choc_chip_cookie_ingredients, numeric = Rating(mean))
+skim(choc_chip_cookie_ingredients) |> print()
+
+#Using the skimr package, I was able to find that about 50% of the ratings had an 87% rating of their cookie recipe or higher. I also found that the average cookie recipe rating was an 81.5%. The output included the console, a skim of numeric values, and a skim of categories. Furthermore, it showed histograms for the data and any missing data based on the parameters I put inside the skim.
+
 
 ```
 
 ```{python}
+import pandas as pd
+df = pd.read_csv("choc_chip_cookie_ingredients.csv")
+print(df.head())
+print(df.info())
+dtype_map = {
+  "Ingredient": "string",
+  "Text": "string",
+  "Recipe_Index": "string",
+  "Rating": "float64",
+  "Quantity":"float64",
+  "Unit":"float64"
+}
+for col, dt in dtype_map.items():
+  if col in df.columns:
+    df[col] = df[col].astype(dt)
+print(df.info())
+print(df.describe(include = "all"))
+
+count_high = (df["Rating"] >= 0.8).sum()
+total_non_missing = df["Rating"].notna().sum()
+prop_high = count_high / total_non_missing
+avg_rating = df["Rating"].mean()
+
 
 ```
 
@@ -34,11 +71,12 @@ Exploratory data analysis is the process of getting familiar with your dataset. 
 
 Generate at least 5 questions you might explore using this database of cookie ingredients.
 
-1.
-2. 
-3. 
-4. 
-5. 
+1. How many different recipes can be randomly generated using every ingredient?
+2. Which chocolate chip recipe has the highest overall rating?
+3. Which chocolate chip recipe uses the most ingredients overall and how does that affect the Rating?
+4. Does the difference in Recipe_Index correlate with the overall rating of the Recipe?
+5. Using the range from 0.0 to 0.1, what ingredients of chocolate chip recipes creates the highest rated chocolate chip recipe?
+6. How many chocolate chip recipes are missing ratings and how would this affect finding the best recipe?
 
 
 ### Skimming the Data
@@ -53,14 +91,52 @@ Install both packages, and read the package documentation ([R](https://cran.r-pr
 
 
 ```{r}
+library(skimr)
+library(readr)
+library(dplyr)
+
+choc_chip_cookie_ingredients <- read_csv(
+  "choc_chip_cookie_ingredients.csv",
+  col_types = cols(Ingredient = col_character(), Text = col_character(), Recipe_Index = col_character(), Rating = col_double(), Quantity = col_double(), Unit = col_double()))
+
+skim(choc_chip_cookie_ingredients)
+skim(choc_chip_cookie_ingredients, Rating, Quantity)
+
+choc_chip_cookie_ingredients %>%
+  select(where(is.numeric)) %>%
+  skim() 
+
 
 ```
 
 ```{python}
+import pandas as pd
+from skimpy import skim
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("choc_chip_cookie_ingredients.csv")
+dtype_map {
+   "Ingredient": "string",
+  "Text": "string",
+  "Recipe_Index": "string",
+  "Rating": "float64",
+  "Quantity":"float64",
+  "Unit":"float64"
+}
+for col, dt in dtype_map.items():
+  if col in df.columns:
+    df[col] = df[col].astype(dt)
+    
+skim(df)
+skim(df.select_dtypes(includes = "number"))
+
 
 ```
 
 [Part 2] Write 1-2 sentences about what you can tell from each summary display you generate. Did you discover anything new about the data?
+
+#Using the skimpy and skimr packages, I am able to generate summary statistics and identify missing data in the chocolate chip cookie recipe dataset. The numeric summary showed that the Rating values were closer to the higher end of the scale, but Quantity is pretty right skewed. This shows that the recipes in this dataset are mostly well-rated, but the Quantity of ingredients varies.
+
 
 ### Generating Tables
 
@@ -69,10 +145,70 @@ You may want to use the `dplyr` package in R (`group_by` or `count` functions), 
 
 [Part 1] Using R and Python, generate a table that shows what **proportion** of recipes contain each type of ingredient, for the most common 20 ingredients.
 
+```{r}
+#make a table of the top 20 ingredients
+library(dplyr)
+library(readr)
+df <- read_csv("choc_chip_cookie_ingredients.csv")
+#total unique recipes
+total_recipes <- n_distinct(df$Recipe_Index)
+
+ingredient_props <- df %>%
+  distinct(Recipe_Index, Ingredient) %>%
+  count(Ingredient, name = "recipe_count") %>%
+  mutate(proportion = recipe_count / total_recipes) %>%
+  arrange(desc(proportion))
+
+top20_ingredients <- ingredient_props %>%
+  slice_head(n = 20)
+print(top20_ingredients)
+
+```
+
+```{python}
+import pandas as pd
+df = pd.read_csv("choc_chip_cookie_ingredients.csv")
+total_recipes = df["Recipe_Index"].nunique()
+dedup = df[["Recipe_Index", "Ingredient"]].drop_duplicates()
+ingredient_props = (
+  dedup.groupby("Ingredient")
+  .size()
+  .reset_index(name = "recipe_count")
+)
+ingredient_props["proportion"] = (
+  ingredient_props["recipe_count"] / total_recipes
+)
+ingredient_props = ingredient_props.sort_values(
+  by = "proportion", ascending = False
+)
+top20_ingredients = ingredient_props.head(20)
+print(top20_ingredients)
+
+
+```
+
+
 [Part 2] Print out a character string that lists all of the ingredients that do not appear in at least 20 recipes.
 
+```{r}
+#ingredients appearing in < 20 recipes
+rare_ingredients <- ingredient_props %>%
+  filter(recipe_count < 20) %>%
+  pull(Ingredient)
 
-(Delete this note, but you can include data values inline in markdown text by using backticks, at least in R. For instance, here is R's built in value for pi: `r pi`. Unfortunately, this doesn't work in python using the knitr markdown engine, but you can print the list out in python anyways using a code chunk.)
+rare_string <- paste(rare_ingredients, collapse = ", ")
+cat(rare_string)
+
+```
+
+```{python}
+rare_ingredients = ingredients_props.loc[
+  ingredient_props["recipe_count"] < 20, "Ingredient"
+]
+rare_string = ", ".join(rare_ingredients)
+print(rare_string)
+
+```
 
 ### Visualization
 
@@ -80,4 +216,53 @@ Using whatever plotting system you are comfortable with in R or python, see if y
 
 [Part 1] Create at least one plot (it doesn't have to be pretty) that showcases an interesting facet of the data.
 
+```{r}
+#ingredient prevalance top 20
+library(dplyr)
+library(readr)
+library(ggplot2)
+dr <- read_csv("choc_chip_cookie_ingredients.csv")
+total_recipes <- n_distinct(df$Recipe_Index)
+
+top20 <- df %>%
+  distinct(Recipe_Index, Ingredient) %>%
+  count(Ingredient, name = "recipe_count") %>%
+  mutate(proportion = recipe_count / total_recipes) %>%
+  arrange(desc(proportion)) %>%
+  slice_head(n = 20)
+
+ggplot(top20, aes(x = reorder(Ingredient, proportion), y = proportion)) + geom_col() + coord_flip() + labs(
+  title = "Top 20 Ingredients by Proportions of Recipes",
+  x = "Ingredient", 
+  y = "Proportion of recipes"
+)
+
+```
+
+```{r}
+#comparison between AllRecipes vs Epicurious vs Misc
+df_recipes <- df %>%
+  distinct(Recipe_Index, Rating) %>%
+  mutate(
+    Source = case_when(
+      grepl("^AR_", Recipe_Index) ~ "AllRecipes",
+      grepl("^E_", Recipe_Index) ~ "Epicurious", 
+      grepl("^Misc__", Recipe_Index) ~ "Misc",
+      TRUE ~ "Other"
+    )
+  )
+ggplot(df_recipes, aes(x = Source, y = Rating)) + geom_boxplot() + 
+  labs(
+    title = "Rating Distribution by Recipe Source",
+    x = "Source",
+    y = "Rating (0-1)"
+  )
+
+```
+
+
 [Part 2] Write 2-3 sentences about what you can learn from that plot and what directions you might want to investigate from here.
+
+#The first bar chart shows that there are a few ingredients that appear in nearly all recipes, while other ingredients are not as common. This shows that all cookie recipes in the database have standard ingredients. The second boxplot compares ratings across recipe sources and whether one source has higher ratings compared to another. 
+
+
