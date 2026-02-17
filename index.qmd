@@ -201,9 +201,7 @@ cat(rare_string)
 ```
 
 ```{python}
-rare_ingredients = ingredients_props.loc[
-  ingredient_props["recipe_count"] < 20, "Ingredient"
-]
+rare_ingredients = ingredients_props[ingredient_props["recipe_count"] < 20, "Ingredient"]
 rare_string = ", ".join(rare_ingredients)
 print(rare_string)
 
