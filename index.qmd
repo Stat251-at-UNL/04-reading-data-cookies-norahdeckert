@@ -44,7 +44,7 @@ dtype_map = {
 }
 for col, dt in dtype_map.items():
   if col in df.columns:
-    df[col] = df[col].astype(dt)
+    df[col] = df[col].astype(df)
 print(df.info())
 print(df.describe(include = "all"))
 
@@ -52,7 +52,6 @@ count_high = (df["Rating"] >= 0.8).sum()
 total_non_missing = df["Rating"].notna().sum()
 prop_high = count_high / total_non_missing
 avg_rating = df["Rating"].mean()
-
 
 ```
 
