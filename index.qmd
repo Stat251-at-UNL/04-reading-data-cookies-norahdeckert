@@ -42,16 +42,7 @@ dtype_map = {
   "Quantity":"float64",
   "Unit":"float64"
 }
-for col, dt in dtype_map.items():
-  if col in df.columns:
-    df[col] = df[col].astype(df)
-print(df.info())
-print(df.describe(include = "all"))
 
-count_high = (df["Rating"] >= 0.8).sum()
-total_non_missing = df["Rating"].notna().sum()
-prop_high = count_high / total_non_missing
-avg_rating = df["Rating"].mean()
 
 ```
 
@@ -109,24 +100,7 @@ choc_chip_cookie_ingredients %>%
 ```
 
 ```{python}
-import pandas as pd
-from skimpy import skim
-import matplotlib.pyplot as plt
-
-df = pd.read_csv("choc_chip_cookie_ingredients.csv")
-dtype_map {
-   "Ingredient": "string",
-  "Text": "string",
-  "Recipe_Index": "string",
-  "Rating": "float64",
-  "Quantity":"float64",
-  "Unit":"float64"
-}
-for col, dt in dtype_map.items():
-  if col in df.columns:
-    df[col] = df[col].astype(dt)
-    
-skim(df)
+import skimpy as skim
 skim(df.select_dtypes(includes = "number"))
 
 
@@ -244,7 +218,7 @@ df_recipes <- df %>%
     Source = case_when(
       grepl("^AR_", Recipe_Index) ~ "AllRecipes",
       grepl("^E_", Recipe_Index) ~ "Epicurious", 
-      grepl("^Misc__", Recipe_Index) ~ "Misc",
+      grepl("^Misc_", Recipe_Index) ~ "Misc",
       TRUE ~ "Other"
     )
   )
@@ -260,6 +234,5 @@ ggplot(df_recipes, aes(x = Source, y = Rating)) + geom_boxplot() +
 
 [Part 2] Write 2-3 sentences about what you can learn from that plot and what directions you might want to investigate from here.
 
-#The first bar chart shows that there are a few ingredients that appear in nearly all recipes, while other ingredients are not as common. This shows that all cookie recipes in the database have standard ingredients. The second boxplot compares ratings across recipe sources and whether one source has higher ratings compared to another. 
-
+#The first bar chart shows that there are a few ingredients that appear in nearly all recipes, while other ingredients are not as common. This shows that all cookie recipes in the database have standard ingredients. The second boxplot compares ratings across recipe sources and whether one source has higher ratings compared to another. Using the boxplot, I can conclude that the recipes found under AllRecipes have a higher overall range of ratings and a higher mean rating compared to the ratings that fall under Epicurious. Also, the miscellaneious recipes are not displayed on the boxplot because no ratings are recorded, therefore they cannot be plotted. Some directions I might want to investigate from here are what are significant factors like cooking time or oven heat that could also affect the cookie ratings?(This is not included in the current data set, just a question in general).
 
